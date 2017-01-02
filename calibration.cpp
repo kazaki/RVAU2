@@ -8,7 +8,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
 #include <opencv2/highgui/highgui.hpp>
-//#include <opencv2/aruco.hpp>
+#include <opencv2/aruco.hpp>
 
 #ifndef _CRT_SECURE_NO_WARNINGS
 #define _CRT_SECURE_NO_WARNINGS
@@ -219,7 +219,6 @@ int cameraCalibration() {
 	if (!fs.isOpened())
 	{
 		cout << "Could not open the configuration file: \"" << inputSettingsFile << "\"" << endl;
-		system("PAUSE");
 		return -1;
 	}
 	fs["Settings"] >> s;
@@ -228,7 +227,6 @@ int cameraCalibration() {
 	if (!s.goodInput)
 	{
 		cout << "Invalid input detected. Application stopping. " << endl;
-		system("PAUSE");
 		return -1;
 	}
 
@@ -250,8 +248,9 @@ int cameraCalibration() {
 		//-----  If no more image, or got enough, then stop calibration and show result -------------
 		if (mode == CAPTURING && imagePoints.size() >= (unsigned)s.nrFrames)
 		{
-			if (runCalibrationAndSave(s, imageSize, cameraMatrix, distCoeffs, imagePoints))
+			if (runCalibrationAndSave(s, imageSize, cameraMatrix, distCoeffs, imagePoints)) {
 				mode = CALIBRATED;
+			}
 			else
 				mode = DETECTION;
 		}
@@ -369,10 +368,33 @@ int cameraCalibration() {
 			remap(view, rview, map1, map2, INTER_LINEAR);
 			imshow("Image View", rview);
 			char c = (char)waitKey();
-			if (c == ESC_KEY || c == 'q' || c == 'Q')
+			if (c == ESC_KEY || c == 'q' || c == 'Q') {
+				destroyAllWindows();
 				break;
+			}
 		}
 	}
+
+	return 0;
+}
+
+int markerCreation() {
+
+	cout << "Creating 2 Markers..." << endl;
+
+	Mat markerImage1, markerImage2;
+	aruco::Dictionary dictionary = aruco::getPredefinedDictionary(aruco::DICT_6X6_250);
+	dictionary.drawMarker(23, 200, markerImage1, 1);
+	dictionary.drawMarker(30, 200, markerImage2, 1);
+
+	system("mkdir markers");
+
+	waitKey(1000);
+
+	imwrite("markers/mi1.png", markerImage1);
+	imwrite("markers/mi2.png", markerImage2);
+
+	cout << "Done." << endl;
 
 	return 0;
 }
@@ -383,8 +405,9 @@ int main(int argc, char* argv[])
 	cameraCalibration();
 
 	// Marker Creation
+	markerCreation();
 
-
+	system("PAUSE");
     return 0;
 }
 
