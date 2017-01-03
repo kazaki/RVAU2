@@ -569,14 +569,11 @@ static void saveCameraParams( Settings& s, Size& imageSize, Mat& cameraMatrix, M
         fs << "Image_points" << imagePtMat;
     }
 
-	ofstream intrinsic_parameters("intrinsic_parameters.txt", ofstream::trunc);
-	
-	if (intrinsic_parameters.is_open())
-	{
-		intrinsic_parameters << cameraMatrix;
-		intrinsic_parameters.close();
-		cout << "Intrinsic parameters saved in file: intrinsic_parameters.txt" << endl;
-	}
+	FileStorage fs1("camera_parameters.txt", FileStorage::WRITE);
+	fs1 << "ip" << cameraMatrix;
+	fs1 << "dc" << distCoeffs;
+
+	cout << "Intrinsic parameters & Distortion Coefficients saved in file: camera_parameters.txt" << endl;
 }
 
 bool runCalibrationAndSave(Settings& s, Size imageSize, Mat&  cameraMatrix, Mat& distCoeffs,vector<vector<Point2f> > imagePoints )
