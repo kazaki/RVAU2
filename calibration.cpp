@@ -369,12 +369,12 @@ int cameraCalibration() {
 			imshow("Image View", rview);
 			char c = (char)waitKey();
 			if (c == ESC_KEY || c == 'q' || c == 'Q') {
-				destroyAllWindows();
 				break;
 			}
 		}
 	}
 
+	destroyAllWindows();
 	return 0;
 }
 

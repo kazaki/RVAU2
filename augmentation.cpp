@@ -9,6 +9,7 @@
 #include <map>
 #include <vector>
 
+
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
@@ -22,7 +23,7 @@ using namespace std;
 static double markerLength = 0.05;
 
 void drawCube(InputOutputArray _image, InputArray _cameraMatrix, InputArray _distCoeffs,
-	InputArray _rvec, InputArray _tvec, float length) {
+	InputArray _rvec, InputArray _tvec, float length, Scalar color) {
 
 	float x2 = length * 2;
 
@@ -63,12 +64,12 @@ void drawCube(InputOutputArray _image, InputArray _cameraMatrix, InputArray _dis
 	// draw axis lines
 
 	for (int i=0; i < imagePoints.size() - 2; i+=2)
-		line(_image, imagePoints[i], imagePoints[i+1], Scalar(0, 0, 255), 3);
+		line(_image, imagePoints[i], imagePoints[i+1], color, 3);
 	
 }
 
 void drawPyramid(InputOutputArray _image, InputArray _cameraMatrix, InputArray _distCoeffs,
-	InputArray _rvec, InputArray _tvec, float length) {
+	InputArray _rvec, InputArray _tvec, float length, Scalar color) {
 
 	float x2 = length * 2;
 
@@ -100,13 +101,13 @@ void drawPyramid(InputOutputArray _image, InputArray _cameraMatrix, InputArray _
 	// draw axis lines
 
 	for (int i = 0; i < imagePoints.size() - 2; i += 2)
-		line(_image, imagePoints[i], imagePoints[i + 1], Scalar(255, 0, 0), 3);
+		line(_image, imagePoints[i], imagePoints[i + 1], color, 3);
 
 }
 
 int main(int argc, char* argv[]) {
 
-	cout << "Showing markers..." << endl;
+	cout << "Showing markers... (Press any key on the marker windows to continue)" << endl;
 
 	HANDLE dir;
 	WIN32_FIND_DATA file_data;
@@ -145,18 +146,19 @@ int main(int argc, char* argv[]) {
 	vector<int> answers;
 	for (unsigned i = 0; i < markers.size(); i++) {
 		markers.at(i);
-		cout << "What would you like to assign " + markers.at(i) + " with? (1:cube 2:pyramid) ";
+		cout << "What would you like to assign " + markers.at(i) + " with? [1:cube 2:pyramid] ";
 		cin >> ans;
-		answers.push_back(ans);
+		if (ans != 1 && ans != 2) {
+			i--;
+			cout << "Invalid response. Please try again." << endl;
+		} else
+			answers.push_back(ans);
 	}
 
 	if (answers.size() != markers.size()) {
 		cout << "An error has occured" << endl;
 		return 1;
 	}
-
-
-
 
 	// capture video feed and detect markers
 	cv::VideoCapture inputVideo;
@@ -170,12 +172,15 @@ int main(int argc, char* argv[]) {
 
 	const cv::Ptr<cv::aruco::Dictionary> dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_250);
 
+	bool once = true;
+
 	while (inputVideo.grab()) {
 		cv::Mat image, imageCopy;
 		inputVideo.retrieve(image);
 		image.copyTo(imageCopy);
 		std::vector<int> ids;
 		std::vector<std::vector<cv::Point2f> > corners;
+
 		cv::aruco::detectMarkers(image, dictionary, corners, ids);
 		// if at least one marker detected
 		if (ids.size() > 0) {
@@ -184,11 +189,17 @@ int main(int argc, char* argv[]) {
 			cv::aruco::estimatePoseSingleMarkers(corners, markerLength, cameraMatrix, distCoeffs, rvecs, tvecs);
 
 			for (int i = 0; i < ids.size(); i++) {
-				if (ids[i] == 23)
-				drawCube(imageCopy, cameraMatrix, distCoeffs, rvecs[i], tvecs[i], 0.025);
-				else
-				drawPyramid(imageCopy, cameraMatrix, distCoeffs, rvecs[i], tvecs[i], 0.025);
-				//cv::aruco::drawAxis(imageCopy, cameraMatrix, distCoeffs, rvecs[i], tvecs[i], 0.1);
+				if (ids[i] == 23) {
+					if (answers.at(0) == 1)
+						drawCube(imageCopy, cameraMatrix, distCoeffs, rvecs[i], tvecs[i], 0.025, Scalar(0, 0, 255));
+					else
+						drawPyramid(imageCopy, cameraMatrix, distCoeffs, rvecs[i], tvecs[i], 0.025, Scalar(0, 0, 255));
+				} else {
+					if (answers.at(1) == 1)
+						drawCube(imageCopy, cameraMatrix, distCoeffs, rvecs[i], tvecs[i], 0.025, Scalar(255, 0, 0));
+					else
+						drawPyramid(imageCopy, cameraMatrix, distCoeffs, rvecs[i], tvecs[i], 0.025, Scalar(255, 0, 0));
+				}
 			}
 
 
@@ -200,12 +211,9 @@ int main(int argc, char* argv[]) {
 
 	}
 
-
-	waitKey(0);
-
-
-
+	destroyAllWindows();
 
 	system("PAUSE");
 	return 0;
 }
+
