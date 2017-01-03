@@ -100,7 +100,7 @@ void drawPyramid(InputOutputArray _image, InputArray _cameraMatrix, InputArray _
 	// draw axis lines
 
 	for (int i = 0; i < imagePoints.size() - 2; i += 2)
-		line(_image, imagePoints[i], imagePoints[i + 1], Scalar(0, 255, 0), 3);
+		line(_image, imagePoints[i], imagePoints[i + 1], Scalar(255, 0, 0), 3);
 
 }
 
